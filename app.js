@@ -25,7 +25,7 @@ async function start() {
     }
 }
 
-app.get('/games/count', async (req, res) => {
+app.get('/games', async (req, res) => {
     try {
         const gameCount = await Game.countDocuments();
         const games = await Game.find(); // Retrieve all games
@@ -39,17 +39,13 @@ app.get('/games/count', async (req, res) => {
     }
 });
 
-// Endpoint to get all players
-app.get('/players/:name', async (req, res) => {
+app.get('/players', async (req, res) => {
     const playerName = req.params.name;
     try {
-        const player = await Player.findOne({ firstName: playerName });
-        if (!player) {
-            return res.status(404).json({ error: 'Player not found' });
-        }
-        const games = await Game.find({ playerId: player.id });
+        const players = await Player.find();
 
-        res.json({ games });
+
+        res.json({ players });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
