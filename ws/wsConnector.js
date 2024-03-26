@@ -67,11 +67,11 @@ export class WsConnector {
         if (this.timeoutId) {
             clearTimeout(this.timeoutId)
         }
-        this.timeoutId = setTimeout(()=>{
-            console.log('рефрешим токен')
-            this.connect()
-
-        }, this.refreshInterval)
+        // this.timeoutId = setTimeout(()=>{
+        //     console.log('рефрешим токен')
+        //     this.connect()
+        //
+        // }, this.refreshInterval)
     }
 
 }
