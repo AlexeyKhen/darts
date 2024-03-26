@@ -28,7 +28,12 @@ async function start() {
 app.get('/games/count', async (req, res) => {
     try {
         const gameCount = await Game.countDocuments();
-        res.json({ gameCount });
+        const games = await Game.find(); // Retrieve all games
+        let totalRounds = 0;
+        games.forEach(game => {
+            totalRounds += game.outcomes.length; // Add rounds from each game
+        });
+        res.json({ gameCount, totalRounds });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }
