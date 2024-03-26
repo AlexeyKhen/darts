@@ -40,10 +40,16 @@ app.get('/games/count', async (req, res) => {
 });
 
 // Endpoint to get all players
-app.get('/players', async (req, res) => {
+app.get('/players/:name', async (req, res) => {
+    const playerName = req.params.name;
     try {
-        const players = await Player.find();
-        res.json({ players });
+        const player = await Player.findOne({ firstName: playerName });
+        if (!player) {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+        const games = await Game.find({ playerId: player.id });
+
+        res.json({ games });
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
     }

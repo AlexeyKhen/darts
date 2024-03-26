@@ -1,16 +1,7 @@
 import axios from "axios";
 import {Game, Player} from "../models/models.js";
-import {WsConnector} from "./wsConnector.js";
-import dotenv from "dotenv";
 
-const config = dotenv.config().parsed
-
-const sessionId = "Vtd0U-ekX6h35kh-gemvEMCh10hLFiomt3f5kEjvyRkAsXkXeL2h-3olh1yuFYJm_squ"
-
-let game1 = null
-let game2 = null
-let gamePlayer1 = null
-let gamePlayer2 = null
+let prevData = ""
 
 const colors = {
     20: "black",
@@ -74,15 +65,53 @@ async function createGameIfNotExists({id, startDate, playerId}) {
 const fetchPlayers = async () => {
     const playerUrs = "https://darts-api.rupr.upsl-tech.ru/twirp/duels.darts.api.Api/GetGame"
     try {
-        console.log('fetching games')
+
         const result = await axios.post(playerUrs, {})
         const data = result.data
         const startDate = data.day.start_time
-        const id = data.contest.id
-        gamePlayer1 = await createPlayerIfNotExists(data.contest.first_player)
-        gamePlayer2 = await createPlayerIfNotExists(data.contest.second_player)
-        game1 = await createGameIfNotExists({id, startDate, playerId: gamePlayer1.id})
-        game2 = await createGameIfNotExists({id, startDate, playerId: gamePlayer2.id})
+        const contest = data.contest
+        const strContest = JSON.stringify(contest)
+        const rounds = contest.rounds
+        if (prevData === strContest || !rounds) {
+            return
+        }
+        prevData = strContest
+
+        const id = contest.id
+
+        const gamePlayer1 = await createPlayerIfNotExists(contest.first_player)
+        const gamePlayer2 = await createPlayerIfNotExists(contest.second_player)
+        const game1 = await createGameIfNotExists({id, startDate, playerId: gamePlayer1.id})
+        const game2 = await createGameIfNotExists({id, startDate, playerId: gamePlayer2.id})
+
+        const firstPlayerOutcomesAll = []
+        const secondPlayerOutcomesAll = []
+
+        rounds.forEach((round) => {
+            const roundOrder = round.order
+            const firstPlayerOutcomes = round.first_player_outcomes
+            const secondPlayerOutcomes = round.second_player_outcomes
+            firstPlayerOutcomes?.forEach((outcome) => {
+                firstPlayerOutcomesAll.push({
+                    sector: outcome.sector ?? 100,
+                    order: `${roundOrder}.${outcome.order}`,
+                    color: colors[outcome.sector] ?? "green"
+                })
+            })
+            secondPlayerOutcomes?.forEach((outcome) => {
+                secondPlayerOutcomesAll.push({
+                    sector: outcome.sector ?? 100,
+                    order: `${roundOrder}.${outcome.order}`,
+                    color: colors[outcome.sector] ?? "green"
+                })
+            })
+        })
+        game1.outcomes = firstPlayerOutcomesAll
+        await game1.save()
+        game2.outcomes = secondPlayerOutcomesAll
+        await game2.save()
+        console.log(`Создал запись`);
+
 
     } catch (e) {
         console.log('cannot fetch players', e)
@@ -93,60 +122,8 @@ const fetchPlayers = async () => {
 export const collect = async () => {
     await fetchPlayers()
 
-    const tokenChecker = new WsConnector({
-        sessionId: config["SESSION_ID"],
-        onMessage: async (parsedMessage) => {
-            try {
-                const data = parsedMessage.result.data.data
-                const status = data.contestStatusUpdatedEvent?.status
-                const outcomeInputedEvent = data.outcomeInputedEvent
+    setInterval(async ()=>{
+        await fetchPlayers()
+    },3000)
 
-                if (!game1 || !game2 || (status && status === "LIVE")) {
-                    await fetchPlayers()
-                    console.log('Игра ')
-                } else if (status && status === "ENDED" || (outcomeInputedEvent && outcomeInputedEvent.contestId !== game1.id)) {
-                    game1 = null
-                    game2 = null
-                    gamePlayer1 = null
-                    gamePlayer2 = null
-                    console.log('Игра закончилась')
-                    return
-                }
-                const rounds = outcomeInputedEvent?.rounds
-                const firstPlayerOutcomesAll = []
-                const secondPlayerOutcomesAll = []
-
-                rounds?.forEach((round) => {
-                    const roundOrder = round.order
-                    const firstPlayerOutcomes = round.firstPlayerOutcomes
-                    const secondPlayerOutcomes = round.secondPlayerOutcomes
-                    firstPlayerOutcomes?.forEach((outcome) => {
-                        firstPlayerOutcomesAll.push({
-                            sector: outcome.sector ?? 100,
-                            order: `${roundOrder}.${outcome.order}`,
-                            color: colors[outcome.sector] ?? "green"
-                        })
-                    })
-                    secondPlayerOutcomes?.forEach((outcome) => {
-                        secondPlayerOutcomesAll.push({
-                            sector: outcome.sector ?? 100,
-                            order: `${roundOrder}.${outcome.order}`,
-                            color: colors[outcome.sector] ?? "green"
-                        })
-                    })
-                })
-                game1.outcomes = firstPlayerOutcomesAll
-                await game1.save()
-                game2.outcomes = secondPlayerOutcomesAll
-                await game2.save()
-                console.log(`Обработал сообщение сектор ${outcomeInputedEvent?.sector}`);
-
-
-            } catch (e) {
-                console.log('Ошибка парсинга', e)
-            }
-        }
-    })
-
-    tokenChecker.connect()
 }
