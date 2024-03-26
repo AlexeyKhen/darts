@@ -62,6 +62,33 @@ async function createGameIfNotExists({id, startDate, playerId}) {
 }
 
 
+function formatDateTime(date) {
+
+    let hour = date.getHours();
+    let minute = date.getMinutes();
+    let second = date.getSeconds();
+    let day = date.getDate();
+    let month = date.getMonth() + 1; // January is 0
+
+    if (hour < 10) {
+        hour = '0' + hour;
+    }
+    if (minute < 10) {
+        minute = '0' + minute;
+    }
+    if (second < 10) {
+        second = '0' + second;
+    }
+    if (day < 10) {
+        day = '0' + day;
+    }
+    if (month < 10) {
+        month = '0' + month;
+    }
+
+    return hour + ':' + minute + ':' + second + ' ' + day + '/' + month;
+}
+
 const fetchPlayers = async () => {
     const playerUrs = "https://darts-api.rupr.upsl-tech.ru/twirp/duels.darts.api.Api/GetGame"
     try {
@@ -110,7 +137,7 @@ const fetchPlayers = async () => {
         await game1.save()
         game2.outcomes = secondPlayerOutcomesAll
         await game2.save()
-        console.log(`Создал запись`);
+        console.log(`Создал запись ${formatDateTime(new Date())}`);
 
 
     } catch (e) {
