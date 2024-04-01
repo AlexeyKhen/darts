@@ -151,6 +151,6 @@ export const collect = async () => {
 
     setInterval(async ()=>{
         await fetchPlayers()
-    },3000)
+    },1500)
 
 }
