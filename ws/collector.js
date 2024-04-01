@@ -95,8 +95,8 @@ const fetchPlayers = async () => {
 
         const result = await axios.post(playerUrs, {})
         const data = result.data
-        const startDate = data.day.start_time
         const contest = data.contest
+        const startDate = contest?.started_at ?? data.day.start_time
         const strContest = JSON.stringify(contest)
         const rounds = contest.rounds
         if (prevData === strContest || !rounds) {
