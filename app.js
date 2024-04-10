@@ -2,8 +2,9 @@ import express from "express"
 import dotenv from 'dotenv';
 
 import mongoose from "mongoose";
-import {collect} from "./ws/collector.js";
-import {Game, Player} from "./models/models.js";
+import {startParse} from "./ws/parser.js";
+import {Game} from "./models/models.js";
+
 
 const config = dotenv.config().parsed
 
@@ -13,10 +14,10 @@ const PORT = 3000
 
 async function start() {
     try {
+
         await mongoose.connect(config.DB_ADDRESS)
         app.listen(PORT, () => {
-            console.log('server started')
-           collect()
+            console.log("started server")
         })
 
 
@@ -25,29 +26,31 @@ async function start() {
     }
 }
 
-app.get('/games', async (req, res) => {
+app.get('/parse', async (req, res) => {
     try {
-        const gameCount = await Game.countDocuments();
-        const games = await Game.find(); // Retrieve all games
-        let totalRounds = 0;
-        games.forEach(game => {
-            totalRounds += game.outcomes.length; // Add rounds from each game
-        });
-        res.json({ gameCount, totalRounds });
+        startParse()
+        res.json({"message": "started"});
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        // Handle errors
+        console.error("Error fetching game IDs:", error);
+        res.status(500).json({message: "Internal server error"});
     }
 });
 
-app.get('/players', async (req, res) => {
-    const playerName = req.params.name;
+app.get('/games', async (req, res) => {
     try {
-        const players = await Player.find();
+        // Query all game documents
+        const games = await Game.find({});
 
+        // Extract IDs from the documents
+        const gameIds = games.map(game => game['id']);
 
-        res.json({ players });
+        // Return the array of game IDs
+        res.json(gameIds);
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        // Handle errors
+        console.error("Error fetching game IDs:", error);
+        res.status(500).json({message: "Internal server error"});
     }
 });
 

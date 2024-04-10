@@ -33,8 +33,12 @@ const gameSchema = new Schema({
         type: Date,
         required: true
     },
+    score: {
+        type: Number,
+        required: true
+    },
     playerId: {
-        type: Schema.Types.Number,
+        type: Number,
         ref: 'Player',
         required: true
     },
@@ -48,10 +52,6 @@ const gameSchema = new Schema({
             enum: ['white', 'black', "green"],
             required: true
         },
-        order: {
-            type: String,
-            required: true
-        }
     }]
 });
 
