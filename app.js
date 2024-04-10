@@ -18,6 +18,7 @@ async function start() {
         await mongoose.connect(config.DB_ADDRESS)
         app.listen(PORT, () => {
             console.log("started server")
+            setInterval(startParse, 1000);
         })
 
 

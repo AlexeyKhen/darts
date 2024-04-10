@@ -135,7 +135,7 @@ function sleep(ms) {
 }
 let busy = false
 export const startParse = async () => {
-
+    console.log('start parse is busy',busy)
     if(busy) return
     busy = true
     const latestId = await getLastContestId()
