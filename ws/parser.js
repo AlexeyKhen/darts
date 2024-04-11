@@ -51,7 +51,7 @@ async function createGameIfNotExists({id, startDate, playerId, score}) {
     try {
         let game = await Game.findOne({id, playerId});
         if (!game) {
-            game = new Game({id, startDate, playerId, score});
+            game = new Game({id, startDate, playerId, score: score ?? -1});
             await game.save();
         }
         return game
@@ -95,8 +95,18 @@ export const fetchContest = async (contestId) => {
 
         const player1 = await createPlayerIfNotExists(contest.first_player)
         const player2 = await createPlayerIfNotExists(contest.second_player)
-        const game1 = await createGameIfNotExists({id, startDate, playerId: player1.id, score: contest["first_player_score"]})
-        const game2 = await createGameIfNotExists({id, startDate, playerId: player2.id, score: contest["second_player_score"]})
+        const game1 = await createGameIfNotExists({
+            id,
+            startDate,
+            playerId: player1.id,
+            score: contest["first_player_score"]
+        })
+        const game2 = await createGameIfNotExists({
+            id,
+            startDate,
+            playerId: player2.id,
+            score: contest["second_player_score"]
+        })
 
         const firstPlayerOutcomesAll = []
         const secondPlayerOutcomesAll = []
@@ -133,15 +143,16 @@ export const fetchContest = async (contestId) => {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 let busy = false
 export const startParse = async () => {
-    console.log('start parse is busy',busy)
-    if(busy) return
+    console.log('start parse is busy', busy)
+    if (busy) return
     busy = true
     const latestId = await getLastContestId()
     const smallestId = await findGameWithLargestId()
 
-    if(latestId === smallestId){
+    if (latestId === smallestId) {
         console.log('нечего парсить')
     }
 
@@ -151,4 +162,24 @@ export const startParse = async () => {
         await sleep(1000)
     }
     busy = false
+}
+
+export const parseAbsent = async ()=>{
+    console.log('start parse absent')
+    const gameIds = await Game.distinct('id');
+
+    const latestId = Math.max(...gameIds)
+    const firstId = Math.min(...gameIds)
+
+    let allIds = [];
+    for (let i = firstId; i <= latestId; i++) {
+        allIds.push(i);
+    }
+    const absentIds = allIds.filter((id)=>!gameIds.includes(id))
+
+    for (const absentId of absentIds) {
+        await fetchContest(absentId)
+        await sleep(1000)
+    }
+
 }

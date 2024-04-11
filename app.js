@@ -2,7 +2,7 @@ import express from "express"
 import dotenv from 'dotenv';
 
 import mongoose from "mongoose";
-import {startParse} from "./ws/parser.js";
+import {parseAbsent, startParse} from "./ws/parser.js";
 import {Game} from "./models/models.js";
 
 
@@ -38,16 +38,10 @@ app.get('/parse', async (req, res) => {
     }
 });
 
-app.get('/games', async (req, res) => {
+app.get('/parse_absent', async (req, res) => {
     try {
-        // Query all game documents
-        const games = await Game.find({});
-
-        // Extract IDs from the documents
-        const gameIds = games.map(game => game['id']);
-
-        // Return the array of game IDs
-        res.json(gameIds);
+        parseAbsent()
+        res.json({"message": "started"});
     } catch (error) {
         // Handle errors
         console.error("Error fetching game IDs:", error);
