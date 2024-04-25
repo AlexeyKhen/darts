@@ -23,6 +23,22 @@ const playerSchema = new Schema({
     }
 });
 
+const outcomeSchema = new Schema({
+    sector: {
+        type: Number,
+        required: true
+    },
+    color: {
+        type: String,
+        enum: ['white', 'black', 'green'],
+        required: true
+    },
+    order: {
+        type: Number,
+        required: true
+    }
+}, { _id: false });
+
 const gameSchema = new Schema({
     id: {
         type: Number,
@@ -42,21 +58,7 @@ const gameSchema = new Schema({
         ref: 'Player',
         required: true
     },
-    outcomes: [{
-        sector: {
-            type: Number,
-            required: true
-        },
-        color: {
-            type: String,
-            enum: ['white', 'black', "green"],
-            required: true
-        },
-        order: {
-            type: Number,
-            required: true
-        },
-    }]
+    outcomes: [outcomeSchema]
 });
 
 export const Player = model('Player', playerSchema);
