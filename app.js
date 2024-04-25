@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 
 import mongoose from "mongoose";
 import {parseAbsent, startParse} from "./ws/parser.js";
-import {Game} from "./models/models.js";
 
 
 const config = dotenv.config().parsed
@@ -18,6 +17,7 @@ async function start() {
         await mongoose.connect(config.DB_ADDRESS)
         app.listen(PORT, () => {
             console.log("started server")
+            startParse()
             setInterval(startParse, 10800000);
         })
 

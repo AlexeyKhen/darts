@@ -52,6 +52,10 @@ const gameSchema = new Schema({
             enum: ['white', 'black', "green"],
             required: true
         },
+        order: {
+            type: Number,
+            required: true
+        },
     }]
 });
 

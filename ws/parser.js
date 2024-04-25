@@ -112,17 +112,20 @@ export const fetchContest = async (contestId) => {
         const secondPlayerOutcomesAll = []
 
         rounds.forEach((round) => {
+            const roundOrder = round.order
             const firstPlayerOutcomes = round.first_player_outcomes
             const secondPlayerOutcomes = round.second_player_outcomes
             firstPlayerOutcomes?.forEach((outcome) => {
                 firstPlayerOutcomesAll.push({
                     sector: outcome.sector ?? 100,
+                    order: `${roundOrder}.${outcome.order}`,
                     color: colors[outcome.sector] ?? "green"
                 })
             })
             secondPlayerOutcomes?.forEach((outcome) => {
                 secondPlayerOutcomesAll.push({
                     sector: outcome.sector ?? 100,
+                    order: `${roundOrder}.${outcome.order}`,
                     color: colors[outcome.sector] ?? "green"
                 })
             })
